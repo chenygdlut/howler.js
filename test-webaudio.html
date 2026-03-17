@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Audio 扬声器测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .audio-list {
+            margin: 20px 0;
+        }
+        .audio-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .audio-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Web Audio 扬声器测试</h1>
+        
+        <div class="status" id="status">
+            <h3>状态信息</h3>
+            <div id="statusContent">加载中...</div>
+        </div>
+        
+        <div class="audio-list">
+            <div class="audio-item">
+                <h4>测试音频 1</h4>
+                <button class="button" id="playSound1">播放</button>
+                <button class="button" id="stopSound1">停止</button>
+            </div>
+            <div class="audio-item">
+                <h4>测试音频 2</h4>
+                <button class="button" id="playSound2">播放</button>
+                <button class="button" id="stopSound2">停止</button>
+            </div>
+        </div>
+        
+        <div class="status">
+            <h3>调试信息</h3>
+            <div id="debugInfo">加载中...</div>
+        </div>
+    </div>
+    
+    <script src="./src/howler.core.js"></script>
+    <script>
+        // 更新状态信息
+        function updateStatus(message) {
+            document.getElementById('statusContent').innerHTML += '<p>' + new Date().toLocaleTimeString() + ': ' + message + '</p>';
+        }
+        
+        // 更新调试信息
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            const info = `
+                <p><strong>Howler.usingWebAudio:</strong> ${Howler.usingWebAudio}</p>
+                <p><strong>Howler.ctx:</strong> ${Howler.ctx ? '存在' : '不存在'}</p>
+                <p><strong>Howler.state:</strong> ${Howler.state}</p>
+                <p><strong>Howler.ctx.state:</strong> ${Howler.ctx ? Howler.ctx.state : 'N/A'}</p>
+                <p><strong>Howler.masterGain:</strong> ${Howler.masterGain ? '存在' : '不存在'}</p>
+                <p><strong>Howler.volume():</strong> ${Howler.volume()}</p>
+                <p><strong>Howler._muted:</strong> ${Howler._muted}</p>
+            `;
+            debugInfo.innerHTML = info;
+        }
+        
+        // 初始化
+        function init() {
+            updateStatus('初始化中...');
+            
+            // 检查Web Audio支持
+            if (Howler.usingWebAudio) {
+                updateStatus('Web Audio API 支持');
+            } else {
+                updateStatus('Web Audio API 不支持，使用 HTML5 Audio');
+            }
+            
+            updateDebugInfo();
+            updateStatus('初始化完成');
+        }
+        
+        // 创建测试音频
+        const sound1 = new Howl({
+            src: ['./tests/audio/sound1.webm', './tests/audio/sound1.mp3'],
+            onload: function() {
+                updateStatus('音频 1 加载完成');
+            },
+            onplayerror: function(id, error) {
+                updateStatus('音频 1 播放错误: ' + error);
+            }
+        });
+        
+        const sound2 = new Howl({
+            src: ['./tests/audio/sound2.webm', './tests/audio/sound2.mp3'],
+            onload: function() {
+                updateStatus('音频 2 加载完成');
+            },
+            onplayerror: function(id, error) {
+                updateStatus('音频 2 播放错误: ' + error);
+            }
+        });
+        
+        // 绑定事件
+        document.getElementById('playSound1').addEventListener('click', function() {
+            updateStatus('尝试播放音频 1');
+            sound1.play();
+            updateDebugInfo();
+        });
+        
+        document.getElementById('stopSound1').addEventListener('click', function() {
+            updateStatus('停止音频 1');
+            sound1.stop();
+            updateDebugInfo();
+        });
+        
+        document.getElementById('playSound2').addEventListener('click', function() {
+            updateStatus('尝试播放音频 2');
+            sound2.play();
+            updateDebugInfo();
+        });
+        
+        document.getElementById('stopSound2').addEventListener('click', function() {
+            updateStatus('停止音频 2');
+            sound2.stop();
+            updateDebugInfo();
+        });
+        
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
+        
+        // 定期更新调试信息
+        setInterval(updateDebugInfo, 2000);
+    </script>
+</body>
+</html>

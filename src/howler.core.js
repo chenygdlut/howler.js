@@ -518,10 +518,14 @@
         return;
       }
 
-      if (self.state === 'running' && self.ctx.state !== 'interrupted' && self._suspendTimer) {
+      // Clear suspend timer if running
+      if (self._suspendTimer) {
         clearTimeout(self._suspendTimer);
         self._suspendTimer = null;
-      } else if (self.state === 'suspended' || self.state === 'running' && self.ctx.state === 'interrupted') {
+      }
+
+      // Always try to resume if context is not running
+      if (self.ctx.state !== 'running') {
         self.ctx.resume().then(function() {
           self.state = 'running';
 
@@ -529,14 +533,18 @@
           for (var i=0; i<self._howls.length; i++) {
             self._howls[i]._emit('resume');
           }
+        }).catch(function(error) {
+          // Handle resume error
+          console.warn('Error resuming AudioContext:', error);
         });
+      } else if (self.state !== 'running') {
+        // Update internal state if context is running but internal state is not
+        self.state = 'running';
 
-        if (self._suspendTimer) {
-          clearTimeout(self._suspendTimer);
-          self._suspendTimer = null;
+        // Emit to all Howls that the audio has resumed.
+        for (var i=0; i<self._howls.length; i++) {
+          self._howls[i]._emit('resume');
         }
-      } else if (self.state === 'suspending') {
-        self._resumeAfterSuspend = true;
       }
 
       return self;
